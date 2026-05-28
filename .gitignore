@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+
+# Env / secrets
+.env
+
+# Data artifacts
+data/chroma/
+*.bm25.pkl
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+
+# Test / cache
+.pytest_cache/
+.mypy_cache/

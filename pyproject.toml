@@ -1,0 +1,32 @@
+[project]
+name = "ask-my-docs"
+version = "0.1.0"
+description = "Production RAG: domain-specific Ask My Docs with hybrid retrieval, reranking, and citation enforcement"
+requires-python = ">=3.11"
+dependencies = [
+    "langchain>=0.3,<0.4",
+    "langchain-community>=0.3,<0.4",
+    "langchain-openai>=0.2,<0.3",
+    "langgraph>=0.2,<0.3",
+    "chromadb>=0.5,<0.6",
+    "rank-bm25>=0.2.2,<0.3",
+    "sentence-transformers>=3.0,<4.0",
+    "pypdf>=4.0,<6.0",
+    "tiktoken>=0.7,<0.9",
+    "openai>=1.40,<2.0",
+    "python-dotenv>=1.0,<2.0",
+    "pydantic>=2.7,<3.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0,<9.0"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[project.scripts]
+ask-my-docs = "ask_my_docs.cli:main"
