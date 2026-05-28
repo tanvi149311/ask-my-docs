@@ -13,7 +13,9 @@ venv/
 
 # Data artifacts
 data/chroma/
-*.bm25.pkl
+data/bm25.pkl
+data/manifest.json
+eval/results.json
 
 # OS / editor
 .DS_Store

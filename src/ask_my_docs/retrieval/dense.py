@@ -19,9 +19,8 @@ def _client() -> chromadb.api.ClientAPI:
 
 
 def build(chunks: list[Chunk]) -> None:
-    """Embed chunks and (re)create the Chroma collection."""
+    """Embed chunks and (re)create the Chroma collection from scratch."""
     client = _client()
-    # Fresh build for the skeleton: drop and recreate.
     try:
         client.delete_collection(config.collection)
     except Exception:
@@ -39,6 +38,26 @@ def build(chunks: list[Chunk]) -> None:
     )
 
 
+def update(to_delete: list[str], to_add: list[Chunk]) -> None:
+    """Incremental update: remove stale chunk IDs, embed and upsert new chunks."""
+    client = _client()
+    coll = client.get_or_create_collection(config.collection)
+
+    if to_delete:
+        coll.delete(ids=to_delete)
+
+    if to_add:
+        embedder = _embedder()
+        texts = [c.text for c in to_add]
+        vectors = embedder.embed_documents(texts)
+        coll.upsert(
+            ids=[c.chunk_id for c in to_add],
+            embeddings=vectors,
+            documents=texts,
+            metadatas=[c.metadata for c in to_add],
+        )
+
+
 def search(query: str, k: int | None = None) -> list[Retrieved]:
     k = k or config.dense_k
     client = _client()
@@ -53,7 +72,6 @@ def search(query: str, k: int | None = None) -> list[Retrieved]:
     dists = res.get("distances", [[None] * len(ids)])[0]
     for cid, doc, meta, dist in zip(ids, docs, metas, dists):
         chunk = Chunk(chunk_id=cid, text=doc, source=meta.get("source", ""), metadata=meta)
-        # Convert distance to a similarity-ish score (higher = better).
         score = 1.0 / (1.0 + dist) if dist is not None else 0.0
         out.append(Retrieved(chunk=chunk, score=score))
     return out

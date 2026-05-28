@@ -17,15 +17,34 @@ def _tokenize(text: str) -> list[str]:
 
 
 def build(chunks: list[Chunk]) -> None:
+    """Build BM25 index from scratch."""
     corpus = [_tokenize(c.text) for c in chunks]
     bm25 = BM25Okapi(corpus)
-    payload = {
-        "bm25": bm25,
-        "chunks": chunks,  # store chunks so search can reconstruct results
-    }
+    payload = {"bm25": bm25, "chunks": chunks}
     config.bm25_path.parent.mkdir(parents=True, exist_ok=True)
     with open(config.bm25_path, "wb") as f:
         pickle.dump(payload, f)
+
+
+def update(to_delete: list[str], to_add: list[Chunk]) -> None:
+    """Remove stale chunk IDs, add new chunks, rebuild BM25 index."""
+    if config.bm25_path.exists():
+        with open(config.bm25_path, "rb") as f:
+            payload = pickle.load(f)
+        delete_set = set(to_delete)
+        existing = [c for c in payload["chunks"] if c.chunk_id not in delete_set]
+    else:
+        existing = []
+
+    all_chunks = existing + to_add
+    if not all_chunks:
+        return
+
+    corpus = [_tokenize(c.text) for c in all_chunks]
+    bm25 = BM25Okapi(corpus)
+    config.bm25_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(config.bm25_path, "wb") as f:
+        pickle.dump({"bm25": bm25, "chunks": all_chunks}, f)
 
 
 def search(query: str, k: int | None = None) -> list[Retrieved]:
